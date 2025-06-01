@@ -403,6 +403,58 @@ io.on('connection', (socket) => {
     room.timerObj = null;
   }
 
+  function tryAutoAssignIfOnlyOneOption(room) {
+    if (!room.settings.limitByTier) return false;
+    if (room.auctionOrder.length === 0) return false;
+  
+    // Get the next player to be auctioned
+    const next = room.auctionOrder[0];
+    const tier = next.tier;
+  
+    // 1. Is this the ONLY remaining player of this tier?
+    const unassignedOfThisTier = room.auctionOrder.filter(e => e.tier === tier);
+    if (unassignedOfThisTier.length !== 1) return false;
+  
+    // 2. Which teams can still accept this tier?
+    const eligibleTeams = [];
+    for (const [teamName, tObj] of Object.entries(room.teams)) {
+      // Skip if team is full
+      if (tObj.members.length >= room.settings.playersPerTeam) continue;
+      // Skip if already has a member of this tier
+      if (tObj.members.some(m => m.tier === tier)) continue;
+      eligibleTeams.push({ teamName, tObj });
+    }
+  
+    // Only ONE eligible team? Do auto-assign
+    if (eligibleTeams.length === 1) {
+      const { teamName, tObj } = eligibleTeams[0];
+      tObj.members.push({ username: next.username, tier: tier });
+  
+      // Remove from auctionOrder
+      room.auctionOrder = room.auctionOrder.filter(e => e.username !== next.username);
+  
+      // System chat message
+      const msg = `${next.username}님(티어 ${tier})이(가) ${teamName}에 자동 배정되었습니다.`;
+      const entry = { username: 'SYSTEM', text: msg, timestamp: Date.now() };
+      room.chatLog.push(entry);
+      io.in(room.roomCode).emit('chat_update', entry);
+  
+      // Update state for all clients
+      io.in(room.roomCode).emit('room_update', {
+        settings: room.settings,
+        teams: room.teams,
+        auctionOrder: room.auctionOrder,
+        elimination: room.elimination,
+        finalEliminated: room.finalEliminated,
+        chatLog: room.chatLog,
+        currentAuction: room.currentAuction,
+      });
+  
+      return true;
+    }
+    return false;
+  }  
+
   socket.on('start_auction', ({ roomCode }) => {
     const room = rooms[roomCode];
     if (!room) {
@@ -413,6 +465,15 @@ io.on('connection', (socket) => {
       socket.emit('error_message', '경매에 남은 플레이어가 없습니다.');
       return;
     }
+  
+    // ====== AUTO-ASSIGN CHECK ======
+    // Attach roomCode property so helper can access it
+    room.roomCode = roomCode;
+    if (tryAutoAssignIfOnlyOneOption(room)) {
+      // If auto-assigned, skip the auction start entirely
+      return;
+    }
+    // ====== END AUTO-ASSIGN CHECK ======  
 
     // If an auction is already in progress, clear it first
     if (room.timerObj) {
@@ -906,12 +967,13 @@ io.on('connection', (socket) => {
   });
 });
 
-// server.listen(PORT, () => {
+server.listen(PORT, () => {
+  console.log(`서버가 실행 중입니다: http://localhost:${PORT}`);
+});
+
+// server.listen(PORT, '0.0.0.0', () => {
 //   console.log(`서버가 실행 중입니다: http://localhost:${PORT}`);
 // });
 
-server.listen(PORT, '0.0.0.0', () => {
-  console.log(`서버가 실행 중입니다: http://0.0.0.0:${PORT}`);
-});
 
 

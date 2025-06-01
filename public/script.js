@@ -56,6 +56,11 @@ let amICaptain   = localStorage.getItem('isCaptain') === 'true';
 let isHost       = false;
 let roomSettings = null;
 let captainMap   = {};
+let userTeamColorMap = {};
+
+// NEW: For SYSTEM color logic
+let userTeamIndexMap = {};
+let userTierMap = {};
 
 let timerStartAt  = 0;
 let timerDuration = 0;
@@ -99,6 +104,41 @@ if (urlParams.get('host') === 'true') {
   adminView.classList.remove('hidden');
 } else {
   joinView.classList.remove('hidden');
+}
+
+function updateUserTeamColorMap(teams) {
+  userTeamColorMap = {};
+  let idx = 0;
+  for (const [teamName, teamObj] of Object.entries(teams)) {
+    if (teamObj.captainName) userTeamColorMap[teamObj.captainName] = idx;
+    for (const m of teamObj.members) {
+      userTeamColorMap[m.username] = idx;
+    }
+    idx++;
+  }
+}
+
+// NEW: For advanced SYSTEM color
+function updateUserMaps(teams, auctionOrder, currentAuction) {
+  userTeamIndexMap = {};
+  userTierMap = {};
+  let idx = 0;
+  for (const [teamName, teamObj] of Object.entries(teams)) {
+    if (teamObj.captainName) userTeamIndexMap[teamObj.captainName] = idx;
+    for (const m of teamObj.members) {
+      userTeamIndexMap[m.username] = idx;
+      userTierMap[m.username] = m.tier;
+    }
+    idx++;
+  }
+  // Also add auctionOrder users to userTierMap
+  (auctionOrder || []).forEach((e) => {
+    userTierMap[e.username] = e.tier;
+  });
+  // And current auction (the one on the block)
+  if (currentAuction && currentAuction.playerName && currentAuction.tier) {
+    userTierMap[currentAuction.playerName] = currentAuction.tier;
+  }
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
@@ -204,6 +244,8 @@ joinForm.addEventListener('submit', (e) => {
 // ──────────────────────────────────────────────────────────────────────────────
 
 socket.on('rejoin_success', (fullState) => {
+  updateUserTeamColorMap(fullState.teams);
+  updateUserMaps(fullState.teams, fullState.auctionOrder, fullState.currentAuction);
   roomSettings = {
     maxCaptains:    fullState.settings.maxCaptains,
     initialPoints:  fullState.settings.initialPoints,
@@ -222,12 +264,14 @@ socket.on('rejoin_success', (fullState) => {
   timerDisplay.textContent = 'TIME COUNT 15.00';
   hasPlayedEnd = false;
   updateRemainingPoints(fullState);
-  showBidControlsIfCaptain();
   window.currentAuction = fullState.currentAuction || {};
+  showBidControlsIfCaptain();
   updateBidInput(window.currentAuction);
 });
 
 socket.on('room_update', (data) => {
+  updateUserTeamColorMap(data.teams);
+  updateUserMaps(data.teams, data.auctionOrder, data.currentAuction);
   if (!roomSettings) {
     roomSettings = {
       maxCaptains:    data.settings.maxCaptains,
@@ -245,8 +289,8 @@ socket.on('room_update', (data) => {
 
   updateCurrentMedia(data.currentAuction || {});
   updateRemainingPoints(data);
-  showBidControlsIfCaptain();
   window.currentAuction = data.currentAuction || {};
+  showBidControlsIfCaptain();
   updateBidInput(window.currentAuction);
 });
 
@@ -266,13 +310,58 @@ socket.on('new_highest_bid', (data) => {
   updateBidInput(window.currentAuction);
 });
 
+function autoAssignIfOnlyOneTeam(teams, nextPlayer, auctionOrder) {
+  // 1. Get the tier of the next player
+  const { tier, username } = nextPlayer;
+
+  // 2. Check how many unassigned players of this tier are left
+  const unassigned = auctionOrder.filter(p => p.tier === tier);
+
+  if (unassigned.length !== 1) return false; // Not the last one, proceed as normal
+
+  // 3. Find which teams still can accept a player of this tier
+  let eligibleTeams = [];
+  for (const team of Object.values(teams)) {
+    // Count how many players of this tier are already in the team
+    const countTier = team.members.filter(m => m.tier === tier).length;
+    // Assume only one per tier is allowed, adjust as per your rules
+    if (countTier === 0 && team.members.length < team.maxSize) {
+      eligibleTeams.push(team);
+    }
+  }
+
+  // 4. If only one team is eligible, auto-assign
+  if (eligibleTeams.length === 1) {
+    eligibleTeams[0].members.push({ username, tier });
+    // Remove from auctionOrder
+    const idx = auctionOrder.findIndex(p => p.username === username);
+    if (idx > -1) auctionOrder.splice(idx, 1);
+    // Notify chat
+    io.to(roomCode).emit('chat_update', {
+      username: "SYSTEM",
+      text: `${username}님이 자동으로 ${eligibleTeams[0].name}에 배정되었습니다.`,
+      timestamp: Date.now(),
+    });
+    return true; // Indicate auto-assignment happened
+  }
+  return false;
+}
+
+
 // ─── NORMAL AUCTION EVENTS ───────────────────────────────────────────────────
 socket.on('auction_started', (data) => {
   playAudio('start');
   hasPlayedEnd = false;
-  startLocalCountdown(data.timer);
-  window.currentAuction = { highestBid: 0 };
+
+  // Make sure playerName and tier are present in server event!
+  window.currentAuction = {
+    playerName: data.playerName,
+    tier: data.tier,
+    highestBid: 0
+  };
   updateBidInput(window.currentAuction);
+  startLocalCountdown(data.timer);
+  showBidControlsIfCaptain();
 });
 
 socket.on('timer_tick', (timeLeft) => {
@@ -308,19 +397,23 @@ socket.on('auction_ended', (info) => {
     tickAudio.currentTime = 0;
   }
   playAudio(info.winner ? 'end-bought' : 'end-notbought');
-  // Reset bid input to new minimum after auction ends (will update on new auction_started as well)
   setTimeout(() => {
     updateBidInput(window.currentAuction);
-  }, 100); // Let next auction load first if any
+  }, 100);
 });
 
 // ─── ELIMINATION AUCTION EVENTS ───────────────────────────────────────────────
 socket.on('elim_auction_started', (data) => {
   playAudio('start');
   hasPlayedEnd = false;
-  startLocalCountdown(data.timer);
-  window.currentAuction = { highestBid: 0 };
+  window.currentAuction = {
+    playerName: data.playerName,
+    tier: data.tier,
+    highestBid: 0
+  };
   updateBidInput(window.currentAuction);
+  startLocalCountdown(data.timer);
+  showBidControlsIfCaptain();
 });
 
 socket.on('elim_timer_tick', (timeLeft) => {
@@ -383,7 +476,6 @@ socket.on('all_auctions_complete', (teams) => {
 
   alert('경매가 종료되었습니다. 결과 파일이 다운로드되었습니다.');
 });
-
 
 // ──────────────────────────────────────────────────────────────────────────────
 //   SEND CHAT
@@ -555,37 +647,47 @@ function renderChatLog(chatLog) {
   chatLogDiv.scrollTop = chatLogDiv.scrollHeight;
 }
 
+// THE IMPORTANT, COLORFUL SYSTEM/CHAT MESSAGE HANDLER!
 function appendChatLine(entry) {
   const div = document.createElement('div');
-  let text = `[${new Date(entry.timestamp).toLocaleTimeString()}] ${entry.username}: ${entry.text}`;
-  function getNameColor(name) {
-    let idx = 0;
-    for (const [team, obj] of Object.entries(roomSettings.teams || {})) {
-      if (obj.captainName === name) return TEAM_COLORS[idx % TEAM_COLORS.length];
-      for (const m of obj.members || []) {
-        if (m.username === name) return TIER_COLORS[m.tier] || "#fff";
-      }
-      idx++;
-    }
-    return "#fff";
-  }
+  let timeStr = `[${new Date(entry.timestamp).toLocaleTimeString()}]`;
+
+  // Regex for red/bold points: matches e.g. 100점, 200 포인트, 500점
+  const highlightPoints = (text) =>
+    text.replace(/(\d+)\s*(점|포인트)/g, '<span style="color:#ff4d4d;font-weight:bold;">$1$2</span>');
+
   if (entry.username === 'SYSTEM') {
-    text = text.replace(/(\d+\s*포인트)/g, '<span class="points">$1</span>');
-    text = text.replace(/([가-힣A-Za-z0-9_]+)님/g, (match, name) => {
-      const color = getNameColor(name);
-      return `<span style="color:${color}; font-weight:bold;">${match}</span>`;
+    let html = entry.text.replace(/([가-힣A-Za-z0-9_]+)님/g, (match, name) => {
+      let color = "#fff";
+      if (userTeamIndexMap[name] !== undefined) {
+        color = TEAM_COLORS[userTeamIndexMap[name] % TEAM_COLORS.length];
+      } else if (userTierMap[name] && TIER_COLORS[userTierMap[name]]) {
+        color = TIER_COLORS[userTierMap[name]];
+      }
+      return `<span style="color:${color};font-weight:bold;">${match}</span>`;
     });
-    div.innerHTML = text;
+    html = highlightPoints(html);
+    div.innerHTML = `<span style="color:#aaa;">${timeStr}</span> <span style="color:#ffd369;">SYSTEM</span><span style="color:#aaa;">:</span> ${html}`;
+    div.classList.add('chat-line', 'system');
   } else {
-    div.textContent = text;
+    let nameColor = "#fff";
+    if (userTeamIndexMap[entry.username] !== undefined) {
+      nameColor = TEAM_COLORS[userTeamIndexMap[entry.username] % TEAM_COLORS.length];
+    } else if (userTierMap[entry.username] && TIER_COLORS[userTierMap[entry.username]]) {
+      nameColor = TIER_COLORS[userTierMap[entry.username]];
+    }
+    // The colon is always gray (#aaa). Both username and text are colored by team/tier.
+    let messageHtml = `<span style="color:#aaa;">${timeStr}</span> <span style="color:${nameColor};">${entry.username}</span><span style="color:#aaa;">:</span> <span style="color:${nameColor};">${entry.text}</span>`;
+    messageHtml = highlightPoints(messageHtml);
+    div.innerHTML = messageHtml;
+    div.classList.add('chat-line');
+    if (entry.username === 'ADMIN') div.classList.add('admin');
+    else if (captainMap[entry.username]) div.classList.add('captain');
   }
-  div.classList.add('chat-line');
-  if (entry.username === 'ADMIN') div.classList.add('admin');
-  else if (entry.username === 'SYSTEM') div.classList.add('system');
-  else if (captainMap[entry.username]) div.classList.add('captain');
   chatLogDiv.appendChild(div);
   chatLogDiv.scrollTop = chatLogDiv.scrollHeight;
 }
+
 
 // ──────────────────────────────────────────────────────────────────────────────
 //   MIDDLE MEDIA DISPLAY
@@ -620,7 +722,6 @@ function updateCurrentMedia(currentAuction) {
   `;
 }
 
-
 // ──────────────────────────────────────────────────────────────────────────────
 //   REMAINING POINTS & BID CONTROLS
 // ──────────────────────────────────────────────────────────────────────────────
@@ -637,9 +738,14 @@ function updateRemainingPoints(data) {
 }
 
 function showBidControlsIfCaptain() {
-  if (!bidControls) return;
-  if (captainMap[myUsername]) {
+  if (!window.currentAuction || !window.currentAuction.playerName) {
+    bidControls.classList.add('hidden');
+    return;
+  }
+  if (amICaptain || isHost) {
     bidControls.classList.remove('hidden');
+    updateBidInput(window.currentAuction);
+    // updateRemainingPoints(); // Optionally pass data here if available
   } else {
     bidControls.classList.add('hidden');
   }
@@ -671,8 +777,6 @@ quickBidButtons.forEach((btn) => {
     });
   });
 });
-
-
 
 placeBidBtn.addEventListener('click', () => {
   const raw    = customBidInput.value.trim();
@@ -727,7 +831,7 @@ function renderHostControls() {
   ctrl.id = 'host-control-panel';
   ctrl.innerHTML = `
     <!-- 일반 경매 컨트롤 -->
-    <input type="text" id="seed-url-input" placeholder="구글 시트 CSV URL을 붙여넣기…" style="width:100px;" />
+    <input type="text" id="seed-url-input" placeholder="시트 CSV URL" style="width:88px;" />
     <button id="seed-url-btn">URL에서 시드 불러오기</button>
     <button id="start-btn">경매 시작</button>
     <button id="shuffle-btn">경매 순서 섞기</button>
@@ -821,15 +925,27 @@ document.addEventListener('DOMContentLoaded', function() {
   if (copyBtn && codeSpan) {
     copyBtn.addEventListener('click', () => {
       const code = codeSpan.textContent;
-      if (code) {
-        navigator.clipboard.writeText(code)
-          .then(() => {
-            copyBtn.textContent = '복사됨!';
-            setTimeout(() => {
-              copyBtn.textContent = '코드 복사';
-            }, 1500);
-          });
-      }
+      if (!code) return;
+      // Try using the Clipboard API
+      navigator.clipboard.writeText(code).then(() => {
+        copyBtn.textContent = '복사됨!';
+        setTimeout(() => { copyBtn.textContent = '코드 복사'; }, 1500);
+      }).catch(() => {
+        // Fallback for unsupported browsers or HTTP
+        try {
+          const textarea = document.createElement('textarea');
+          textarea.value = code;
+          document.body.appendChild(textarea);
+          textarea.select();
+          document.execCommand('copy');
+          document.body.removeChild(textarea);
+          copyBtn.textContent = '복사됨!';
+          setTimeout(() => { copyBtn.textContent = '코드 복사'; }, 1500);
+        } catch (err) {
+          alert('복사를 지원하지 않는 브라우저입니다.');
+        }
+      });
     });
   }
 });
+

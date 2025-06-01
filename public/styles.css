@@ -483,11 +483,9 @@ html, body {
 /* ──────────────────────────────────────────────────────────────────────────── CHAT MESSAGE COLORS ──────────────────────────────────────────────────────────────────────────── */
 .chat-line.admin {
   color: #ff4d4d;
-  font-weight: bold;
 }
 .chat-line.system {
   color: #ffd369;
-  font-style: italic;
 }
 .chat-line.captain {
   color: #7ad4e2;
@@ -844,23 +842,18 @@ html, body {
 }
 .system-label {
   color: #ffcb2b;
-  font-weight: bold;
 }
 .name {
   color: #41c7f7;
-  font-weight: bold;
 }
 .points {
   color: #ffe45a;
-  font-weight: bold;
 }
 .auction {
   color: #fb7a2b;
-  font-weight: bold;
 }
 .captain {
   color: #a3e635;
-  font-weight: bold;
 }
 .points {
   color: #e53935 !important;
@@ -907,4 +900,9 @@ html, body {
   box-shadow: 0 2px 12px #2227;
   display: block;
   object-fit: contain;
+}
+
+.room-label {
+  margin-right: 8px;
+  letter-spacing: 1px;
 }
