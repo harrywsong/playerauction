@@ -910,10 +910,8 @@ io.on('connection', (socket) => {
 //   console.log(`서버가 실행 중입니다: http://localhost:${PORT}`);
 // });
 
-server.listen(3000, '0.0.0.0', () => {
-  console.log('서버가 실행 중입니다: http://0.0.0.0:3000');
+server.listen(PORT, '0.0.0.0', () => {
+  console.log(`서버가 실행 중입니다: http://0.0.0.0:${PORT}`);
 });
-
-
 
 
