@@ -1,0 +1,45 @@
+# Node modules
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Logs
+logs/
+*.log
+
+# Runtime data
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# Build output
+dist/
+build/
+coverage/
+public/assets/
+public/dist/
+
+# Vite/React build output (Vite uses 'dist', Create React App uses 'build')
+*.local
+.env
+.env.*  # All env files
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# VSCode, JetBrains, etc.
+.vscode/
+.idea/
+
+# Sockets
+*.sock
+
+# Optional: PM2 logs
+pmlogs/
+pm2.log
+
+# Optional: test output
+test-output/

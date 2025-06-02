@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 /* ──────────────────────────────────────────────────────────────────────────── GLOBAL RESET & BASE STYLES ──────────────────────────────────────────────────────────────────────────── */
 * {
   box-sizing: border-box;
@@ -906,3 +907,913 @@ html, body {
   margin-right: 8px;
   letter-spacing: 1px;
 }
+=======
+/* ──────────────────────────────────────────────────────────────────────────── GLOBAL RESET & BASE STYLES ──────────────────────────────────────────────────────────────────────────── */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+html, body {
+  height: 100%;
+  overflow: hidden;
+  font-family: "Segoe UI", Arial, sans-serif;
+  background-color: #0b1d2b;
+ /* Dark navy background */
+  color: #fff;
+}
+.hidden {
+  display: none !important;
+}
+.error-msg {
+  color: #ff4d4d;
+  font-size: 0.9rem;
+  margin-top: 0.5rem;
+}
+/* ──────────────────────────────────────────────────────────────────────────── OVERLAY VIEWS: Admin / Join ──────────────────────────────────────────────────────────────────────────── */
+.overlay-view {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(11, 29, 43, 0.95);
+  z-index: 1000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.overlay-content {
+  background: #1f2d3a;
+  border-radius: 8px;
+  padding: 30px;
+  width: 320px;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+}
+.overlay-content h2 {
+  text-align: center;
+  margin-bottom: 20px;
+  color: #7ad4e2;
+}
+.overlay-content form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+.overlay-content label {
+  display: flex;
+  flex-direction: column;
+  font-size: 0.95rem;
+  color: #ccc;
+}
+.overlay-content input[type="text"], .overlay-content input[type="number"] {
+  margin-top: 5px;
+  padding: 8px;
+  border: 1px solid #3c4f5d;
+  border-radius: 4px;
+  background: #243544;
+  color: #fff;
+}
+.overlay-content input[type="checkbox"] {
+  margin-left: 5px;
+  transform: scale(1.2);
+}
+.overlay-content button {
+  padding: 10px;
+  background: #27435b;
+  border: none;
+  border-radius: 4px;
+  color: #fff;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.overlay-content button:hover {
+  background: #3c556d;
+}
+#admin-result {
+  margin-top: 20px;
+  text-align: center;
+  color: #ffd369;
+}
+#admin-result p {
+  font-size: 1.1rem;
+  margin-bottom: 10px;
+}
+#admin-result button {
+  background: #7ad4e2;
+  color: #0b1d2b;
+  margin-top: 10px;
+  padding: 8px 14px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+#admin-result button:hover {
+  background: #5bb0c2;
+}
+/* ──────────────────────────────────────────────────────────────────────────── INFO BAR (Room / Player) ──────────────────────────────────────────────────────────────────────────── */
+.info-bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 50px;
+ /* fixed height */
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 20px;
+  background: #1f2d3a;
+  border-bottom: 1px solid #27343f;
+  z-index: 200;
+}
+.info-left, .info-center, .info-right {
+  display: flex;
+  align-items: center;
+}
+.info-left {
+  flex: 1;
+}
+.info-center{
+  flex: 1;
+  justify-content: center;
+}
+.info-right {
+  flex: 1;
+  justify-content: flex-end;
+}
+#host-control-panel button {
+  margin-left: 8px;
+  padding: 6px 12px;
+  background: #27435b;
+  border: none;
+  border-radius: 4px;
+  color: #fff;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+#host-control-panel button:hover {
+  background: #3c556d;
+}
+/* ──────────────────────────────────────────────────────────────────────────── MAIN GRID: pinned between info-bar (50px) and bottom ──────────────────────────────────────────────────────────────────────────── */
+#auction-view {
+  position: relative;
+  height: 100%;
+}
+#main-container {
+  position: absolute;
+  top: 50px;
+ /* directly below the 50px-tall info bar */
+  bottom: 0;
+ /* extends to bottom of viewport */
+  left: 0;
+  right: 0;
+  display: grid;
+  grid-template-columns: 1.2fr 1.5fr 1fr;
+  gap: 10px;
+  padding: 10px;
+  overflow: hidden;
+}
+/* Common panel styles */
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow: hidden;
+}
+/* ──────────────────────────────────────────────────────────────────────────── LEFT PANEL: Teams ──────────────────────────────────────────────────────────────────────────── */
+.left-panel {
+  overflow-y: auto;
+  padding-right: 5px;
+}
+.team-card {
+  background: #1f2d3a;
+  border-radius: 6px;
+  padding: 12px;
+  margin-bottom: 10px;
+}
+.team-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.team-name {
+  font-size: 1rem;
+  font-weight: bold;
+  color: #7ad4e2;
+}
+.team-points {
+  font-size: 0.9rem;
+  color: #ffd369;
+}
+.team-captain {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.team-captain .captain-avatar {
+  width: 24px;
+  height: 24px;
+  background: #3c4f5d;
+  border-radius: 50%;
+  margin-right: 8px;
+}
+.team-captain .captain-name {
+  font-size: 0.9rem;
+  color: #e1eaff;
+}
+.team-slots {
+  display: flex;
+  justify-content: space-between;
+}
+.slot {
+  width: 18%;
+  aspect-ratio: 1 / 1;
+  background: #2a3b47;
+  border: 1px solid #3c4f5d;
+  border-radius: 4px;
+  position: relative;
+}
+.slot.empty {
+  opacity: 0.3;
+}
+/* ──────────────────────────────────────────────────────────────────────────── CENTER PANEL: Media / Chat / Bid Controls ──────────────────────────────────────────────────────────────────────────── */
+.center-panel {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.top-card {
+  flex: 1;
+  background: #15212b;
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+/* MEDIA DISPLAY: no fixed size—let the <img> define its size and center it within the container. */
+.video-placeholder {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #2a3b47;
+  padding: 10px;
+ /* no width or height: it will grow/shrink to fit whatever <img> we load */
+}
+.video-placeholder img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+.chat-card {
+  flex: 0 0 200px;
+ /* fixed height (adjustable) */
+  padding: 10px;
+  background: #15212b;
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.chat-title {
+  font-size: 1rem;
+  margin-bottom: 8px;
+  color: #7ad4e2;
+}
+.chat-log {
+  background: #1f2d3a;
+  border-radius: 4px;
+  flex: 1;
+  padding: 8px;
+  overflow-y: auto;
+  margin-bottom: 8px;
+}
+.chat-log .chat-line {
+  margin-bottom: 6px;
+}
+.chat-input-row {
+  display: flex;
+  gap: 8px;
+}
+.chat-input-row input[type="text"] {
+  flex: 1;
+  padding: 8px;
+  border: 1px solid #3c4f5d;
+  border-radius: 4px;
+  background: #243544;
+  color: #fff;
+}
+.chat-input-row button {
+  padding: 8px 14px;
+  background: #27435b;
+  border: none;
+  border-radius: 4px;
+  color: #fff;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.chat-input-row button:hover {
+  background: #3c556d;
+}
+/* ──────────────────────────────────────────────────────────────────────────── BID CONTROLS (below chat card) ──────────────────────────────────────────────────────────────────────────── */
+#bid-controls {
+  background: transparent;
+  padding: 0;
+  margin-top: 10px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+}
+.bid-row {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+.timer-box {
+  background-color: #FF4D4D;
+ /* bright red */
+  color: #FFFFFF;
+ /* white text */
+  font-size: 1rem;
+  font-weight: bold;
+  padding: 6px 12px;
+  border-radius: 4px;
+  min-width: 100px;
+  text-align: center;
+}
+#quick-bid-buttons {
+  display: flex;
+  gap: 4px;
+}
+.bid-btn {
+  background-color: #FFE066;
+ /* pale yellow */
+  color: #000000;
+ /* black text */
+  border: none;
+  border-radius: 4px;
+  padding: 6px 10px;
+  font-weight: bold;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background-color 0.15s, transform 0.1s;
+}
+.bid-btn:hover {
+  background-color: #FFDD22;
+}
+.bid-btn:active {
+  transform: translateY(1px);
+}
+.points-box {
+  background-color: #A3D5F7;
+ /* soft sky‑blue */
+  color: #000000;
+ /* black text */
+  font-size: 0.9rem;
+  font-weight: bold;
+  padding: 6px 10px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+#custom-bid-input {
+  background-color: #EBEBEB;
+ /* light gray */
+  color: #000000;
+ /* black text */
+  border: 1px solid #CCCCCC;
+  border-radius: 4px;
+  padding: 6px 8px;
+  width: 80px;
+  text-align: center;
+}
+.place-bid-btn {
+  background-color: #F5D7A3;
+ /* light beige */
+  color: #000000;
+ /* black text */
+  border: none;
+  border-radius: 4px;
+  padding: 6px 12px;
+  font-weight: bold;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background-color 0.15s, transform 0.1s;
+}
+.place-bid-btn:hover {
+  background-color: #E0C482;
+ /* slightly darker beige */
+}
+.place-bid-btn:active {
+  transform: translateY(1px);
+}
+#bid-controls.hidden {
+  display: none !important;
+}
+/* ──────────────────────────────────────────────────────────────────────────── RIGHT PANEL: Auction Order & Elimination ──────────────────────────────────────────────────────────────────────────── */
+.right-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow: hidden;
+}
+.auction-order-card {
+  background: #1f2d3a;
+  border-radius: 6px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+.card-header {
+  background: #27435b;
+  padding: 8px 10px;
+  border-top-left-radius: 6px;
+  border-top-right-radius: 6px;
+}
+.card-title {
+  font-size: 1rem;
+  color: #e1eaff;
+}
+.auction-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px;
+}
+.auction-list ul {
+  list-style: none;
+}
+.auction-list li {
+  display: flex;
+  align-items: center;
+  padding: 6px 8px;
+  margin-bottom: 6px;
+  background: #2a3b47;
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+.auction-list li:hover {
+  background: #324559;
+}
+.avatar-placeholder {
+  width: 32px;
+  height: 32px;
+  background: #3c4f5d;
+  border-radius: 50%;
+  margin-right: 10px;
+}
+.username {
+  font-size: 0.95rem;
+  color: #dce1e6;
+}
+.bottom-right-card {
+  background: #1f2d3a;
+  border-radius: 6px;
+  flex: 0 0 120px;
+ /* fixed height */
+  display: flex;
+  flex-direction: column;
+}
+.elimination-list {
+  flex: 1;
+  padding: 8px;
+  overflow-y: auto;
+}
+.empty-text {
+  color: #8a9ba8;
+  font-size: 0.9rem;
+  text-align: center;
+  margin-top: 30px;
+}
+/* ──────────────────────────────────────────────────────────────────────────── CHAT MESSAGE COLORS ──────────────────────────────────────────────────────────────────────────── */
+.chat-line.admin {
+  color: #ff4d4d;
+}
+.chat-line.system {
+  color: #ffd369;
+}
+.chat-line.captain {
+  color: #7ad4e2;
+ /* or define multiple captain‑X classes if desired */
+}
+/* ─────────────────────────────────────────────────────────────────────────── ELIMINATION LIST (유찰순서) – same styling as auction‐order ────────────────────────────────────────────────────────────────────────── */
+.elimination-list ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.elimination-list li {
+  display: flex;
+  align-items: center;
+  padding: 6px 8px;
+  margin-bottom: 6px;
+  background: #2a3b47;
+ /* same as .auction-list li background */
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+.elimination-list li:hover {
+  background: #324559;
+ /* same hover color as auction‐order items */
+}
+.elimination-list .avatar-placeholder {
+  width: 32px;
+  height: 32px;
+  background: #3c4f5d;
+  border-radius: 50%;
+  margin-right: 10px;
+}
+.elimination-list .username {
+  font-size: 0.95rem;
+  color: #dce1e6;
+}
+/* ─────────────────────────────────────────────────────────────────────────── CENTER PANEL (Video → Chat → Bid Controls) as a flex column ────────────────────────────────────────────────────────────────────────── */
+.center-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow: hidden;
+}
+/* (1) VIDEO / MEDIA section takes a fixed (or proportional) portion */
+.center-panel .top-card {
+ /* You can tweak “flex: 1.5” to taste – it means “take 1.5× as much space” compared to the Chat area (which will be “flex: 1”). */
+  flex: 1.5;
+  background: #15212b;
+ /* same as before */
+  border-radius: 6px;
+  overflow: hidden;
+}
+/* Make sure the image inside top‐card fills its container */
+.center-panel .top-card .video-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: #bbb;
+  font-size: 1.1rem;
+  user-select: none;
+}
+/* (2) CHAT panel must expand to fill all remaining vertical space */
+.center-panel .chat-card {
+  flex: 1;
+ /* “take 1 share” of remaining space */
+  display: flex;
+  flex-direction: column;
+ /* so chat‐log can flex inside it */
+  background: #15212b;
+  border-radius: 6px;
+  overflow: hidden;
+}
+/* Inside chat‐card: title + .chat-log (flexes) + input row (fixed height) */
+.center-panel .chat-card .chat-title {
+  font-size: 1rem;
+  margin-bottom: 8px;
+  color: #7ad4e2;
+  padding-left: 10px;
+ /* optional spacing */
+}
+.center-panel .chat-card .chat-log {
+  flex: 1;
+ /* allow the log area to grow/shrink */
+  background: #1f2d3a;
+  border-radius: 4px;
+  padding: 8px;
+  overflow-y: auto;
+  margin: 0 10px 8px;
+ /* left/right margins for breathing room */
+}
+.center-panel .chat-card .chat-log .chat-line {
+  margin-bottom: 6px;
+}
+.center-panel .chat-card .chat-input-row {
+  display: flex;
+  gap: 8px;
+  padding: 0 10px 10px;
+ /* pad bottom so it’s not flush to the edge */
+}
+.center-panel .chat-card .chat-input-row input[type="text"] {
+  flex: 1;
+  padding: 8px;
+  border: 1px solid #3c4f5d;
+  border-radius: 4px;
+  background: #243544;
+  color: #fff;
+}
+.center-panel .chat-card .chat-input-row button {
+  padding: 8px 14px;
+  background: #27435b;
+  border: none;
+  border-radius: 4px;
+  color: #fff;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.center-panel .chat-card .chat-input-row button:hover {
+  background: #3c556d;
+}
+/* (3) BID CONTROLS below Chat – keeps its own height */
+#bid-controls {
+  background: transparent;
+ /* or a different background, if you like */
+}
+/* Make sure Chat & Bid are visible (only for captains) */
+#bid-controls.hidden {
+  display: none !important;
+}
+/* ─────────────────────────────────────────────────────────────────────────── RIGHT PANEL: “Auction Order” (2/3 height) & “Elimination Order” (1/3 height) ────────────────────────────────────────────────────────────────────────── */
+.right-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  height: 100%;
+ /* Ensure it fills the full height of the parent */
+  overflow: hidden;
+ /* Child cards will scroll internally */
+}
+/* ─── 경매순서 (Auction Order) Card ───────────────────────────────────────── */
+.auction-order-card {
+  background: #1f2d3a;
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  flex: 2;
+ /* 2 parts out of total 3 */
+  overflow: hidden;
+}
+/* Card header remains fixed at top */
+.auction-order-card .card-header {
+  background: #27435b;
+  padding: 8px 10px;
+  border-top-left-radius: 6px;
+  border-top-right-radius: 6px;
+  flex: 0 0 auto;
+}
+/* Make the <ul> itself fill the rest and scroll */
+.auction-order-card .auction-list {
+  flex: 1;
+ /* Fill remaining vertical space within the card */
+  overflow-y: auto;
+  padding: 8px 0;
+}
+.auction-order-card .auction-list ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.auction-order-card .auction-list li {
+  display: flex;
+  align-items: center;
+  padding: 6px 8px;
+  margin-bottom: 6px;
+  background: #2a3b47;
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+.auction-order-card .auction-list li:hover {
+  background: #324559;
+}
+.auction-order-card .auction-list .avatar-placeholder {
+  width: 32px;
+  height: 32px;
+  background: #3c4f5d;
+  border-radius: 50%;
+  margin-right: 10px;
+}
+.auction-order-card .auction-list .username {
+  font-size: 0.95rem;
+  color: #dce1e6;
+}
+/* ── 유찰순서 (Elimination Order) Card ──────────────────────────────────── */
+.bottom-right-card {
+  background: #1f2d3a;
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+ /* 1 part out of total 3 */
+  overflow: hidden;
+}
+.bottom-right-card .card-header {
+  background: #27435b;
+  padding: 8px 10px;
+  border-top-left-radius: 6px;
+  border-top-right-radius: 6px;
+  flex: 0 0 auto;
+}
+/* The elimination list container will fill the rest and scroll */
+.bottom-right-card .elimination-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 0;
+}
+.bottom-right-card .elimination-list ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.bottom-right-card .elimination-list li {
+  display: flex;
+  align-items: center;
+  padding: 6px 8px;
+  margin-bottom: 6px;
+  background: #2a3b47;
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+.bottom-right-card .elimination-list li:hover {
+  background: #324559;
+}
+.bottom-right-card .elimination-list .avatar-placeholder {
+  width: 32px;
+  height: 32px;
+  background: #3c4f5d;
+  border-radius: 50%;
+  margin-right: 10px;
+}
+.bottom-right-card .elimination-list .username {
+  font-size: 0.95rem;
+  color: #dce1e6;
+}
+/* ─────────────────────────────────────────────────────────────────────────── AVATAR ICONS (for Auction/Elimination lists, and team slots) ──────────────────────────────────────────────────────────────────────────── */
+/* Ensure every <img class="avatar-icon"> is exactly 32×32px and circular */
+.avatar-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-right: 10px;
+}
+/* Fix .info-right so buttons wrap if there are too many, and always remain visible */
+.info-right {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-wrap: wrap;
+ /* allow wrapping onto a second line if needed */
+  padding-left: 5px;
+ /* so that buttons aren’t jammed right up against the edge */
+  overflow-x: auto;
+ /* if there truly are too many controls, allow horizontal scroll */
+}
+/* Optional scrollbar‐hiding for .info-right if you don’t want to see the tiny scrollbar */
+.info-right::-webkit-scrollbar {
+  height: 4px;
+}
+.info-right::-webkit-scrollbar-thumb {
+  background: #3c4f5d;
+  border-radius: 2px;
+}
+/* ─────────────────────────────────────────────────────────────────────────── AUCTION + ELIMINATION LIST ITEMS: make sure each <li> lines up nicely ──────────────────────────────────────────────────────────────────────────── */
+.auction-list li, .elimination-list li {
+  display: flex;
+  align-items: center;
+  padding: 6px 8px;
+  margin-bottom: 6px;
+  background: #2a3b47;
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+.auction-list li:hover, .elimination-list li:hover {
+  background: #324559;
+}
+/* ─────────────────────────────────────────────────────────────────────────── SLOT CONTENT (icon + name) FOR FILLED TEAM SLOTS ──────────────────────────────────────────────────────────────────────────── */
+/* Make each team‐slot a flex‐column container, centered */
+.slot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 18%;
+  aspect-ratio: 1 / 1;
+  background: #2a3b47;
+  border: 1px solid #3c4f5d;
+  border-radius: 4px;
+  position: relative;
+  color: #fff;
+  overflow: hidden;
+}
+/* If the slot is empty, dim it */
+.slot.empty {
+  opacity: 0.3;
+}
+/* Player icon inside a slot */
+.slot .player-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-bottom: 4px;
+  border: 2px solid #3c4f5d;
+}
+/* Player name under the icon */
+.slot .player-name {
+  font-size: 0.8rem;
+  text-align: center;
+  word-break: break-word;
+  line-height: 1.1rem;
+  margin-top: 2px;
+}
+/* If you want the slot to scroll (in case of overflow), ensure children stay visible */
+.slot .player-name, .slot .player-icon {
+  flex-shrink: 0;
+  flex-grow: 0;
+}
+/* ─────────────────────────────────────────────────────────────────────────── (Re‐include any previously shown rules for consistency) ──────────────────────────────────────────────────────────────────────────── */
+/* Example: existing “TEAM CAPTAIN ROW” should remain unchanged */
+.team-captain {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+}
+/* … [the rest of your existing CSS stays exactly the same] … */
+/* ─── Fix Auction/Elimination icons to 32×32px circles ─── */
+/* If your JS is injecting an <img> directly into each <li>… */
+.auction-list li img, .elimination-list li img {
+  width: 32px;
+  height: 32px;
+  object-fit: cover;
+  border-radius: 50%;
+  margin-right: 10px;
+ /* space between icon and username */
+}
+/* In case you’re wrapping the <img> in a placeholder <div class="avatar-placeholder">… */
+.auction-list li .avatar-placeholder img, .elimination-list li .avatar-placeholder img {
+  width: 32px;
+  height: 32px;
+  object-fit: cover;
+  border-radius: 50%;
+  margin-right: 10px;
+}
+.system-label {
+  color: #ffcb2b;
+}
+.name {
+  color: #41c7f7;
+}
+.points {
+  color: #ffe45a;
+}
+.auction {
+  color: #fb7a2b;
+}
+.captain {
+  color: #a3e635;
+}
+.points {
+  color: #e53935 !important;
+  font-weight: bold;
+}
+/* ────────────────────────────────────────────── MEDIA DISPLAY: Video & Image Responsive Sizing ────────────────────────────────────────────── */
+
+/* Optional: For .media-video only (not images) */
+.media-video {
+  background: #000;
+}
+.center-panel .top-card {
+  flex: 1 1 0;               /* Let it grow/shrink */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #15212b;
+  border-radius: 12px;
+  overflow: hidden;
+  min-height: 0;
+  min-width: 0;
+}
+
+.video-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #2a3b47;
+  border-radius: 12px;
+  width: 100%;
+  height: 100%;
+}
+
+.video-placeholder img,
+.video-placeholder video {
+  width: 100%;
+  height: 100%;
+  max-width: 1280px;
+  height: auto;
+  aspect-ratio: 16 / 9;
+  max-height: 720px;
+  border-radius: 12px;
+  background: #000;
+  box-shadow: 0 2px 12px #2227;
+  display: block;
+  object-fit: contain;
+}
+
+.room-label {
+  margin-right: 8px;
+  letter-spacing: 1px;
+}
+>>>>>>> 26316e305236d651758e107d090d070b544eae56
