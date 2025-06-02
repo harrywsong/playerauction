@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>멸망전 경매</title>
+  <link rel="stylesheet" href="styles.css" />
+  <!-- SheetJS (for parsing .xlsx/.csv and CSV text) -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+</head>
+<body>
+  <!-- ────────── ADMIN VIEW (Create Room) ────────── -->
+  <section id="admin-view" class="overlay-view hidden">
+    <div class="overlay-content">
+      <h2>새 경매방 만들기</h2>
+      <form id="create-room-form">
+        <label>
+          최대 주장 수:
+          <input type="number" id="maxCaptains" min="1" max="10" value="2" required />
+        </label>
+        <label>
+          팀별 시작 포인트:
+          <input type="number" id="initialPoints" min="100" max="5000" value="1000" required />
+        </label>
+        <label>
+          팀당 인원:
+          <select id="playersPerTeam">
+            <option value="4" selected>4명</option>
+            <option value="5">5명</option>
+          </select>
+        </label>
+        <label>
+          티어 중복 제한
+          <input type="checkbox" id="limitByTier" />
+        </label>
+        <button type="submit">방 코드 생성</button>
+      </form>
+      <div id="admin-result" class="hidden">
+        <p>방 코드: <span id="room-code-display"></span></p>
+        <button id="copy-room-code" type="button">코드 복사</button>
+        <button id="go-to-lobby">경매방으로 이동</button>        
+      </div>
+    </div>
+  </section>
+
+  <!-- ────────── JOIN VIEW (Join Room) ────────── -->
+  <section id="join-view" class="overlay-view hidden">
+    <div class="overlay-content">
+      <h2>경매방 참가</h2>
+      <form id="join-room-form">
+        <label>
+          방 코드: 
+          <input type="text" id="joinRoomCode" maxlength="6" required />
+        </label>
+        <label>
+          이름:
+          <input type="text" id="joinUsername" required />
+        </label>
+        <label>
+          주장으로 참가
+          <input type="checkbox" id="joinAsCaptain" />
+        </label>
+        <button type="submit">참가</button>
+      </form>
+      <div id="join-error" class="error-msg hidden"></div>
+    </div>
+  </section>
+
+  <!-- ────────── AUCTION VIEW ────────── -->
+  <div id="auction-view" class="hidden">
+    <div id="auction-info" class="info-bar">
+      <div class="info-left">
+        <span class="room-label"><strong>방 코드:</strong></span> <span id="displayRoomCode"></span>
+      </div>      
+      <div class="info-center">
+        <strong></strong> <span id="displayUsername"></span>
+        <span id="displayRole"></span>
+      </div>
+      <div class="info-right">
+        <!-- Host controls (Start/Pause/Resume/Seed) are injected by script.js -->
+      </div>
+    </div>
+
+    <div id="main-container">
+      <!-- ─── LEFT PANEL: Teams ─── -->
+      <div class="panel left-panel">
+        <!-- Teams are rendered dynamically by script.js -->
+      </div>
+
+      <!-- ─── CENTER PANEL: Media / Chat / Bid Controls ─── -->
+      <div class="panel center-panel">
+        <!-- (1) MEDIA DISPLAY -->
+        <div class="center-card top-card">
+          <div class="video-placeholder" id="media-display">
+            <!-- Will load /img/{CurrentPlayer}.png or default.png -->
+          </div>
+        </div>
+
+        <!-- (2) CHAT BOX -->
+        <div class="center-card bottom-card chat-card">
+          <h4 class="chat-title">채팅</h4>
+          <div id="chat-log" class="chat-log"></div>
+          <div id="chat-input-row" class="chat-input-row">
+            <input type="text" id="chat-input" placeholder="메시지를 입력하세요…" />
+            <button id="send-chat-btn">전송</button>
+          </div>
+        </div>
+
+        <!-- (3) BID CONTROLS (with TIMER) -->
+        <div id="bid-controls" class="bid-controls hidden">
+          <div class="bid-row">
+            <!-- (a) TIMER -->
+            <div id="timer-display" class="timer-box">타이머 00.00</div>
+
+            <!-- (b) QUICK +X Buttons -->
+            <div id="quick-bid-buttons" class="quick-buttons">
+              <button class="bid-btn" data-increment="5">+5</button>
+              <button class="bid-btn" data-increment="10">+10</button>
+              <button class="bid-btn" data-increment="50">+50</button>
+              <button class="bid-btn" data-increment="100">+100</button>
+            </div>
+
+            <!-- (c) REMAINING POINTS + CUSTOM BID + “입찰” -->
+            <div class="custom-bid-area">
+              <div id="remaining-points-container" class="points-box">
+                <span id="remaining-points-label">잔여 포인트 </span>
+                <span id="remaining-points">0</span>
+              </div>
+              <input
+                type="number"
+                id="custom-bid-input"
+                min="1"
+                placeholder="포인트 입력"
+              />
+              <button id="place-bid-btn" class="place-bid-btn">입찰</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ─── RIGHT PANEL: Auction Order & Elimination ─── -->
+      <div class="panel right-panel">
+        <div class="auction-order-card">
+          <div class="card-header">
+            <span class="card-title">경매순서</span>
+          </div>
+          <div class="auction-list">
+            <ul id="auction-order-list"></ul>
+          </div>
+        </div>
+        <div class="bottom-right-card">
+          <div class="card-header">
+            <span class="card-title">유찰순서</span>
+          </div>
+          <div class="elimination-list" id="elimination-list">
+            <p class="empty-text">유찰된 인원이 없습니다</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ────────────────────────────────────────────────────────────────────────────
+       AUDIO (Do Not Remove!)
+  ──────────────────────────────────────────────────────────────────────────── -->
+  <audio id="audio-start" src="audio/start.mp3"></audio>
+  <audio id="audio-tick" src="audio/ticking.mp3"></audio>
+  <audio id="audio-success" src="audio/successfulbid.mp3"></audio>
+  <audio id="audio-end-bought" src="audio/end-bought.mp3"></audio>
+  <audio id="audio-end-notbought" src="audio/end-notbought.mp3"></audio>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
+
+<!--
+
+https://docs.google.com/spreadsheets/d/e/2PACX-1vSBgP_Tt-0rxJnxt73_vJkBtei_hmbiik63STSWsIB0z3OkHuZmEPJaZAFNSZbKEMfow8DqH4sQnkdx/pub?gid=0&single=true&output=csv
+
+-->
